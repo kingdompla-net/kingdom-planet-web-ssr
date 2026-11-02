@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "ssr": "kingdom-planet-ssr",
+    "gateway-poc": "kp-ssr-proxy-poc-20261028"
+  }
+}
