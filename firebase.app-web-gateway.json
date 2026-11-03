@@ -2,7 +2,7 @@
   "functions": [
     {
       "source": "functions/appWebGateway",
-      "codebase": "appWebGateway",
+      "codebase": "app-web-gateway",
       "runtime": "nodejs22",
       "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log"]
     }

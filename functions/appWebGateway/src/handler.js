@@ -5,7 +5,7 @@ const {
   getKpApiBaseUrl,
 } = require('./config');
 const {
-  createForwardedHeaders,
+  createForwardedHeaderSet,
   getRequestBody,
   getRequestTarget,
   normalizeHost,
@@ -16,11 +16,11 @@ const { writeUpstreamResponse } = require('./response');
 
 const timeoutMs = 55_000;
 
-function createAppWebGatewayHandler(dependencies = {}) {
-  const readAppWebSsrUrl = dependencies.getAppWebSsrUrl ?? getAppWebSsrUrl;
-  const readKpApiBaseUrl = dependencies.getApiBaseUrl ?? getKpApiBaseUrl;
-  const fetchRequest = dependencies.fetch ?? globalThis.fetch;
-  const logError = dependencies.logError ?? console.error;
+function createAppWebGatewayHandler(dependencyMap = {}) {
+  const readAppWebSsrUrl = dependencyMap.getAppWebSsrUrl ?? getAppWebSsrUrl;
+  const readKpApiBaseUrl = dependencyMap.getKpApiBaseUrl ?? getKpApiBaseUrl;
+  const fetchRequest = dependencyMap.fetch ?? globalThis.fetch;
+  const logError = dependencyMap.logError ?? console.error;
 
   return async (request, response) => {
     const host = normalizeHost(
@@ -37,7 +37,7 @@ function createAppWebGatewayHandler(dependencies = {}) {
 
     try {
       const target = getRequestTarget(request, {
-        getApiBaseUrl: () => {
+        getKpApiBaseUrl: () => {
           const value = readKpApiBaseUrl();
           if (!value) throw new Error('KP_API_BASE_URL is not configured.');
           return parseUpstreamBase(value, 'KP_API_BASE_URL').toString().replace(/\/$/, '');
@@ -54,7 +54,7 @@ function createAppWebGatewayHandler(dependencies = {}) {
 
       const upstreamResponse = await fetchRequest(target.url, {
         method,
-        headers: createForwardedHeaders(request, host, protocol, target.isApiRequest),
+        headers: createForwardedHeaderSet(request, host, protocol, target.isApiRequest),
         body: getRequestBody(request, method),
         redirect: 'manual',
         signal: AbortSignal.timeout(timeoutMs),

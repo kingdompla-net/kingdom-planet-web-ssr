@@ -68,12 +68,12 @@ function parseUpstreamBase(value, label) {
   return url;
 }
 
-function getRequestTarget(request, dependencies) {
+function getRequestTarget(request, dependencyMap) {
   const requestUrl = new URL(request.originalUrl || request.url || '/', 'https://request.invalid');
   const isApiRequest =
     requestUrl.pathname === '/kp-api' || requestUrl.pathname.startsWith('/kp-api/');
   if (isApiRequest) {
-    const apiBaseUrl = dependencies.getApiBaseUrl();
+    const apiBaseUrl = dependencyMap.getKpApiBaseUrl();
     const apiRoutePath = requestUrl.pathname.slice('/kp-api'.length) || '/';
     return {
       isApiRequest: true,
@@ -87,24 +87,24 @@ function getRequestTarget(request, dependencies) {
     throw error;
   }
 
-  const appWebSsrUrl = dependencies.getAppWebSsrUrl();
+  const appWebSsrUrl = dependencyMap.getAppWebSsrUrl();
   const forwardedUrl = makeUpstreamUrl(appWebSsrUrl, requestUrl.pathname, requestUrl.search);
   return { isApiRequest: false, url: forwardedUrl };
 }
 
-function createForwardedHeaders(request, host, protocol, isApiRequest) {
-  const headers = new Headers();
+function createForwardedHeaderSet(request, host, protocol, isApiRequest) {
+  const headerSet = new Headers();
   const headerNameList = isApiRequest ? apiHeaderNameList : documentHeaderNameList;
   for (const name of headerNameList) {
     const value = readHeader(request, name);
-    if (value) headers.set(name, value);
+    if (value) headerSet.set(name, value);
   }
-  headers.set('x-forwarded-host', host);
-  headers.set('x-forwarded-proto', protocol);
-  if (isApiRequest && !headers.has('origin')) {
-    headers.set('origin', `${protocol}://${host}`);
+  headerSet.set('x-forwarded-host', host);
+  headerSet.set('x-forwarded-proto', protocol);
+  if (isApiRequest && !headerSet.has('origin')) {
+    headerSet.set('origin', `${protocol}://${host}`);
   }
-  return headers;
+  return headerSet;
 }
 
 function getRequestBody(request, method) {
@@ -116,7 +116,7 @@ function getRequestBody(request, method) {
 }
 
 module.exports = {
-  createForwardedHeaders,
+  createForwardedHeaderSet,
   getRequestBody,
   getRequestTarget,
   normalizeHost,
