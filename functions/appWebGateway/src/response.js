@@ -16,7 +16,7 @@ const responseHeaderBlockSet = new Set([
   'upgrade',
 ]);
 
-function copyResponseHeaders(upstreamResponse, response) {
+function copyResponseHeaderMap(upstreamResponse, response) {
   upstreamResponse.headers.forEach((value, name) => {
     if (!responseHeaderBlockSet.has(name.toLowerCase())) {
       response.setHeader(name, value);
@@ -28,7 +28,7 @@ function copyResponseHeaders(upstreamResponse, response) {
 
 async function writeUpstreamResponse(upstreamResponse, response, method) {
   response.status(upstreamResponse.status);
-  copyResponseHeaders(upstreamResponse, response);
+  copyResponseHeaderMap(upstreamResponse, response);
   if (method === 'HEAD' || !upstreamResponse.body) return response.end();
   await pipeline(Readable.fromWeb(upstreamResponse.body), response);
   return undefined;
